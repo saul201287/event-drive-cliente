@@ -1,51 +1,48 @@
-import React, { useState, useEffect } from 'react';
-import socketIOClient from 'socket.io-client';
+import axios from "axios";
+import React, { useState, useEffect } from "react";
+import io from "socket.io-client";
 
-const ENDPOINT = 'http://localhost:3005';
 
-function App() {
+const App = () => {
   const [messages, setMessages] = useState([]);
-  const [socket, setSocket] = useState(null);
-
   useEffect(() => {
-    const newSocket = socketIOClient(ENDPOINT);
-    setSocket(newSocket);
-
+    const newSocket = io("https://api-ws-server.onrender.com/");
+    newSocket.on("mensajeServidor", (message) => {
+      console.log(message);
+      setMessages((prevMessages) => [...prevMessages, message]);
+    });
   }, []);
 
-  useEffect(() => {
-    if (socket) {
-      socket.on('message', (message) => {
-        setMessages((prevMessages) => [...prevMessages, message]);
-      });
-    }
-  }, [socket]);
 
-  const sendMessage = (message) => {
-    if (socket) {
-      socket.emit('message', message);
-    }
+  const alertNotification = async () => {
+    const data = await axios.post("https://api-event-driven.onrender.com/products/", {
+      name: "coca",
+      description: "grande",
+      price: 22,
+    });
+    console.log(data);
   };
 
   return (
     <div>
       <ul>
         {messages.map((message, index) => (
-          <li key={index}>{message}</li>
+          <div key={index}>
+          <li>{message.idPay}</li>
+          <li>{message.product}</li>
+          <li>{message.date}</li>
+          <li>{message.price}</li>
+          </div>
         ))}
       </ul>
-      <input
+      <button
         type="text"
         placeholder="Escribe un mensaje"
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            sendMessage(e.target.value);
-            e.target.value = '';
-          }
-        }}
-      />
+        onClick={alertNotification}>
+        Comprame soy barato y un vicio sano
+      </button>
     </div>
   );
-}
+};
 
 export default App;
